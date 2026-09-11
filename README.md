@@ -8,8 +8,6 @@
 
 | Identitas | Keterangan |
 |---|---|
-| Nama mahasiswa / anggota tim | **[Isi nama lengkap mahasiswa / anggota tim]** |
-| NIM | **[Isi NIM setiap anggota]** |
 | Kelas | **[Isi kelas]** |
 | Dosen pengampu | **[Isi nama dosen pengampu]** |
 | Program studi / institusi | **[Isi sesuai identitas peserta mata kuliah]** |
@@ -584,11 +582,4 @@ Pengembangan kode dan dokumentasi dibantu AI. Identitas mahasiswa/tim, kontribus
 - Alamat tujuan: `https://nouranisa.github.io/fading-dawn/` — verifikasi setelah GitHub Pages aktif.
 - QR code belum dibuat sebelum alamat publik terkonfirmasi dapat dimainkan.
 
-### Kelengkapan sebelum laporan final
 
-- [ ] Nama, NIM, kelas, pengampu, dan tahun akademik.
-- [ ] Sketsa karakter dan panel storyboard visual.
-- [ ] Screenshot aktual untuk Bab III, Bab IV, dan lampiran.
-- [ ] Playtest browser, hasil PASS/FAIL, catatan bug, serta data perangkat.
-- [ ] Konfirmasi deployment publik dan tautan game aktif.
-- [ ] Pencocokan rujukan dengan buku yang digunakan di kelas.
