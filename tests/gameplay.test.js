@@ -19,3 +19,20 @@ test('new game starts; gathering twice cannot duplicate the same node',()=>{cons
 test('foundation, wall and opposite door can all be placed without overlap',()=>{const h=harness();h.run('begin(false);openingTime=0;state.inventory.wood=20;state.inventory.stone=10;state.inventory.scrap=10;state.x=8;state.z=20;yaw=0;buildMode=true;candidate=buildCandidate();');assert.equal(h.run('candidate.valid'),true);h.run('place();piece="wall";candidate=buildCandidate();');assert.equal(h.run('candidate.valid'),true);h.run('place();state.z=12;yaw=Math.PI;piece="door";candidate=buildCandidate();');assert.equal(h.run('candidate.valid'),true);h.run('place();');assert.equal(h.run('state.buildings.length'),3);});
 test('radio rejects incomplete mission, then completes and persists a qualified mission',()=>{const h=harness();h.run('begin(false);openingTime=0;state.x=22;state.z=-32;state.inventory.scrap=5;state.inventory.stone=4;interact();');assert.equal(h.run('state.won'),false);assert.equal(h.run('state.inventory.scrap'),5);h.run('state.buildings=[{type:"foundation",x:8,z:16,r:0},{type:"wall",x:8,z:18,r:0},{type:"door",x:8,z:14,r:0}];state.killed=[0,1,2];interact();');assert.equal(h.run('state.won'),true);assert.equal(h.run('saved().won'),true);assert.equal(h.elements.get('ending').open,true);});
 test('reload transfers only available ammo and health depletion opens game over',()=>{const h=harness();h.run('begin(false);openingTime=0;state.mag=10;state.inventory.ammo=1;startReload();tick(1.6);');assert.equal(h.run('state.mag'),11);assert.equal(h.run('state.inventory.ammo'),0);h.run('state.health=.1;state.hunger=0;tick(.1);');assert.equal(h.run('state.health'),0);assert.equal(h.elements.get('ending').open,true);});
+test('gun damages visible targets, but a nearby wall blocks the muzzle even when the camera sees over it',()=>{
+ const h=harness();
+ h.run('begin(false);openingTime=0;state.x=0;state.z=0;staticBoxes.length=0;for(const e of enemies)e.hp=0;enemies[0].hp=90;enemies[0].x=0;enemies[0].z=-12;attack();');
+ assert.equal(h.run('state.mag'),11);
+ assert.equal(h.run('enemies[0].hp'),45);
+ assert.equal(h.run('tracers[0].hit'),true);
+ assert.equal(h.run('dynamicGeometry().data.every(Number.isFinite)'),true);
+ h.run('enemies[0].hp=90;fireCooldown=0;staticBoxes.push({x:0,y:.75,z:-2,w:3,h:1.5,d:.25});camera();');
+ assert.equal(h.run('traceScene(eye,forward,obstacles(),enemies).enemyId'),0);
+ h.run('attack();');
+ assert.equal(h.run('state.mag'),10);
+ assert.equal(h.run('enemies[0].hp'),90);
+ assert.equal(h.run('tracers[1].hit'),false);
+ assert.ok(h.run('tracers[1].to.z')>-2);
+ h.run('tick(.2);');
+ assert.equal(h.run('tracers.length'),0);
+});

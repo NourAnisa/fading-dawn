@@ -4,7 +4,7 @@
 
 **Laporan Mata Kuliah STI7356 — Pengembangan Game**
 
-> **Status versi 0.1:** kode prototipe tersedia, pemeriksaan sumber dan 12 pengujian logika lulus. Playtest browser, pengukuran performa, dan screenshot hasil permainan belum dilakukan. Bagian hasil membedakan implementasi pada kode dari hasil pengujian pemain. Dokumen mengikuti struktur `Template_Laporan_STI7356_Pengembangan_Game(1).pdf`; contoh 2D disesuaikan dengan proyek 3D. Identitas mahasiswa belum diberikan.
+> **Status versi 0.2:** kode prototipe tersedia di GitHub, pemeriksaan sumber dan 14 pengujian logika lulus. Pengarah tautan utama sudah berhasil dipublikasikan melalui GitHub Pages. Playtest browser, pengukuran performa, dan screenshot hasil permainan belum dilakukan. Bagian hasil membedakan implementasi pada kode dari hasil pengujian pemain. Dokumen mengikuti struktur `Template_Laporan_STI7356_Pengembangan_Game(1).pdf`; contoh 2D disesuaikan dengan proyek 3D. Identitas mahasiswa belum diberikan.
 
 | Identitas | Keterangan |
 |---|---|
@@ -29,7 +29,17 @@ python3 -m http.server 8080 --directory docs
 
 Buka [game lokal](http://localhost:8080). Di Windows, perintah server dapat menggunakan `py -m http.server 8080 --directory docs`. Python hanya diperlukan untuk server pengembangan. Versi publik memakai GitHub Pages.
 
-**Publikasi GitHub Pages:** buka [Settings → Pages](https://github.com/NourAnisa/fading-dawn/settings/pages), pilih **Source: GitHub Actions**, lalu jalankan ulang workflow **Validate and deploy game** dari [Actions](https://github.com/NourAnisa/fading-dawn/actions). Alamat tujuan publikasi adalah `https://nouranisa.github.io/fading-dawn/`; alamat ini baru dapat digunakan setelah deployment berstatus sukses.
+**Mainkan:** [Buka Fading Dawn](https://nouranisa.github.io/fading-dawn/) · [Tautan langsung ke game](https://nouranisa.github.io/fading-dawn/docs/).
+
+**Publikasi GitHub Pages:** konfigurasi yang sedang digunakan adalah **Deploy from a branch → main → / (root)**. Berkas `index.html` di akar repositori mengarahkan pengunjung ke `docs/`, tempat game berada. Publikasi pengarah ini telah [berhasil melalui workflow bawaan Pages](https://github.com/NourAnisa/fading-dawn/actions/runs/34572720239). Lihat [Actions](https://github.com/NourAnisa/fading-dawn/actions) untuk status pembaruan berikutnya. Workflow tambahan **Validate and deploy game** masih tercatat gagal sebelum langkah validasi dimulai; pemeriksaan lokal yang dilaporkan di bawah telah dijalankan terpisah.
+
+### Pembaruan versi 0.2
+
+- Karakter berputar mengikuti arah pandang; model pemain memiliki ransel dan pistol.
+- Tembakan menampilkan jejak peluru, kilatan moncong, serta penanda benturan pada musuh. Pemeriksaan arah tembakan dari moncong mencegah peluru melewati dinding dekat pemain.
+- Petunjuk misi di HUD berubah mengikuti progres pengumpulan bahan, pembangunan, pertarungan, dan radio.
+- Tombol I dapat menutup tas kembali; P/Esc mengelola jeda dan panel permainan.
+- Tautan utama GitHub Pages mengarah ke game. Format simpanan versi awal tetap dipakai agar progres sebelumnya dapat dimuat.
 
 | Kontrol | Fungsi |
 |---|---|
@@ -382,13 +392,13 @@ Audio tidak diimpor dari file WAV/OGG/MP3. `AudioContext` diaktifkan setelah int
 
 ### 4.1 Implementasi Karakter dan Aset Visual
 
-[engine.js](docs/engine.js) menyediakan geometri segitiga, balok, kerucut, kamera perspektif, pencahayaan, dan kabut. [game.js](docs/game.js) menyusun karakter, vegetasi, kabin, sumber daya, dan menara. Aset tidak melalui proses import gambar; koordinat, ukuran, dan warna dibentuk langsung dalam kode. Animasi gerak anggota tubuh menggunakan fungsi sinus sederhana.
+[engine.js](docs/engine.js) menyediakan geometri segitiga, balok, kerucut, kamera perspektif, pencahayaan, dan kabut. [game.js](docs/game.js) menyusun karakter, vegetasi, kabin, sumber daya, dan menara. Aset tidak melalui proses import gambar; koordinat, ukuran, dan warna dibentuk langsung dalam kode. Animasi gerak anggota tubuh menggunakan fungsi sinus sederhana. Pada versi 0.2, geometri karakter dan normal pencahayaannya diputar mengikuti arah pandang; musuh menghadap pemain. Jejak peluru dibuat dari dua bidang segitiga bersilangan.
 
 Pemeriksaan sintaks dan geometri menghasilkan nilai terhingga pada pengujian. Hasil ini belum memverifikasi kompilasi shader pada GPU pengguna atau kualitas visual. **Screenshot runtime karakter dan aset belum tersedia.**
 
 ### 4.2 Implementasi UI/UX dan Opening Movie
 
-[index.html](docs/index.html) dan [style.css](docs/style.css) memuat menu, HUD, inventory, bantuan, dialog hasil, dan kontrol sentuh. `game.js` menghubungkan perubahan keadaan ke label kondisi, objektif, dan persediaan. Pembuka 12 detik, tombol lewati, serta kontrol audio juga dihubungkan melalui kode.
+[index.html](docs/index.html) dan [style.css](docs/style.css) memuat menu, HUD, inventory, bantuan, dialog hasil, dan kontrol sentuh. `game.js` menghubungkan perubahan keadaan ke label kondisi, objektif, persediaan, dan petunjuk langkah misi berikutnya. Pembuka 12 detik, tombol lewati, serta kontrol audio juga dihubungkan melalui kode.
 
 Belum dilakukan penilaian kontras di scene aktual, pembesaran teks, resolusi ponsel, atau kepuasan pengguna. **Screenshot menu, HUD, pembuka, menang, dan game over masih perlu dilengkapi.**
 
@@ -404,7 +414,7 @@ Fungsi audio memproduksi musik ambient sederhana dan efek berbasis oscillator. E
 
 ### 4.5 Hasil Dummy Game dan Pengujian (Prototyping)
 
-Kode prototipe didistribusikan sebagai HTML, CSS, dan JavaScript di folder `docs`. Proyek tidak memerlukan proses bundling atau pemasangan paket runtime. Workflow GitHub Actions menyiapkan pemeriksaan dan publikasi; aktivasi Pages tetap bergantung pada pengaturan repository.
+Kode prototipe didistribusikan sebagai HTML, CSS, dan JavaScript di folder `docs`. Proyek tidak memerlukan proses bundling atau pemasangan paket runtime. Workflow bawaan GitHub Pages telah memublikasikan proyek dari akar branch `main`; pengarah di akar menuju game dalam `docs/`. Workflow tambahan untuk validasi dan deployment masih gagal sebelum langkah tes berjalan, sehingga hasil tes yang dinyatakan berikut berasal dari eksekusi lokal.
 
 Verifikasi lokal yang telah dijalankan:
 
@@ -413,18 +423,19 @@ node scripts/check.mjs
 node --test tests/core.test.js tests/gameplay.test.js
 ```
 
-**Hasil aktual:** tiga modul JavaScript lolos pemeriksaan sintaks; referensi aset HTML dan import lokal ditemukan; 12 pengujian lulus, 0 gagal. Detail tes ada pada [core.test.js](tests/core.test.js) dan [gameplay.test.js](tests/gameplay.test.js). Tes integrasi memakai pengganti DOM, renderer, dan audio; tidak menjalankan browser.
+**Hasil aktual:** tiga modul JavaScript lolos pemeriksaan sintaks; referensi aset HTML dan import lokal ditemukan; 14 pengujian lulus, 0 gagal. Detail tes ada pada [core.test.js](tests/core.test.js) dan [gameplay.test.js](tests/gameplay.test.js). Tes integrasi memakai pengganti DOM, renderer, dan audio; tidak menjalankan browser.
 
 | Kelompok pengujian otomatis | Jumlah | Hasil |
 |---|---:|---|
 | Crafting dan pembayaran atomik | 3 | PASS |
 | Penyimpanan, pemulihan, sanitasi data | 2 | PASS |
-| Ray, tabrakan, determinisme, geometri | 3 | PASS |
+| Ray, tabrakan, pemilihan sasaran, determinisme, geometri | 4 | PASS |
 | Pengambilan item tanpa duplikasi | 1 | PASS |
 | Penempatan rangkaian bangunan | 1 | PASS |
 | Syarat radio dan persistensi kemenangan | 1 | PASS |
 | Isi ulang terbatas persediaan dan game over | 1 | PASS |
-| **Total** | **12** | **12 PASS / 0 FAIL** |
+| Tembakan dan penghalang antara moncong dan sasaran | 1 | PASS |
+| **Total** | **14** | **14 PASS / 0 FAIL** |
 
 **Tabel 7. Matriks Test Play Dummy Game**
 
@@ -465,7 +476,7 @@ Keterbatasan utama meliputi kualitas visual yang belum ditinjau di browser, kont
 | 9 | Menu; 3.7.2 dan 4.3 | Implementasi kode; uji menu browser belum dilakukan |
 | 10 | Tahapan dan gameplay; 3.8 dan 4.3 | Satu kawasan; playtest menyeluruh belum dilakukan |
 | 11 | Audio; 3.9 dan 4.4 | Sintesis audio; uji dengar belum dilakukan |
-| 12 | Dummy game; 4.5 | Sumber dan tes logika tersedia; build publik/playtest perlu konfirmasi |
+| 12 | Dummy game; 4.5 | Sumber, tes logika, dan deployment Pages tersedia; playtest perlu dilakukan |
 
 ## BAB V. PENUTUP
 
@@ -474,13 +485,13 @@ Keterbatasan utama meliputi kualitas visual yang belum ditinjau di browser, kont
 1. Fading Dawn telah dirancang dengan satu kawasan dan tiga tahap tantangan yang menghubungkan eksplorasi, persediaan, bangunan, pertarungan, dan radio. Diagram navigasi dan game loop telah tersedia; penyelesaian oleh pemain belum diverifikasi.
 2. Sumber mencakup satu karakter pemain, satu tipe musuh dengan delapan instans, material, consumable, serta tiga jenis bangunan. Representasi geometri telah ditulis; kualitas visual dan bukti screenshot masih perlu diperiksa.
 3. Storyline, delapan rancangan panel, menu, HUD, pembuka 12 detik, dan audio sintetis telah dituangkan dalam dokumen dan kode sesuai lingkupnya. Rancangan panel belum menjadi storyboard visual lengkap, dan UX/audio belum dievaluasi.
-4. Tiga modul lolos pemeriksaan sintaks dan 12 tes logika lulus. Hasil ini mendukung konsistensi aturan yang diuji, tetapi tidak menggantikan pengujian browser, playtest, atau konfirmasi keberhasilan deployment.
+4. Tiga modul lolos pemeriksaan sintaks dan 14 tes logika lulus. Deployment melalui workflow bawaan Pages berhasil. Hasil ini mendukung aturan dan proses publikasi yang diuji, tetapi tidak menggantikan pengujian browser atau playtest.
 
 ### 5.2 Saran
 
 1. **Teknis:** lakukan playtest desktop dan ponsel, dokumentasikan bug nyata, evaluasi pembidikan dan collision, perbaiki AI, serta simpan keadaan musuh jika diperlukan.
 2. **Konten:** lengkapi sketsa karakter, panel storyboard, audio yang lebih kaya, dan variasi tantangan setelah mekanik inti terbukti dapat dimainkan.
-3. **Distribusi:** aktifkan Pages, periksa build publik, lalu minta calon pemain menguji alur tanpa pendampingan. Isi hasil aktual dan bukti gambar sebelum laporan diserahkan sebagai laporan final.
+3. **Distribusi:** periksa tampilan build publik pada perangkat nyata, telusuri kegagalan workflow validasi tambahan, lalu minta calon pemain menguji alur tanpa pendampingan. Isi hasil aktual dan bukti gambar sebelum laporan diserahkan sebagai laporan final.
 
 ## DAFTAR PUSTAKA
 
@@ -514,7 +525,7 @@ Referensi bernomor menurut kemunculan pertama. Lima rujukan wajib dari template 
 
 ### Lampiran A. Game Design Document (GDD) Lengkap untuk Lingkup Prototipe
 
-| Aspek | Aturan versi 0.1 |
+| Aspek | Aturan versi 0.2 |
 |---|---|
 | Tujuan pengalaman | Bertahan, menyiapkan perlengkapan, dan memulihkan komunikasi |
 | Pemain awal | Health, hunger, thirst, stamina: 100; posisi awal `(0, 20)` |
@@ -552,7 +563,8 @@ Naskah delapan panel tercantum pada **3.5.2**. Lengkapi panel visual 1–8 denga
 
 | Berkas | Tanggung jawab |
 |---|---|
-| [docs/index.html](docs/index.html) | Struktur UI dan entrypoint |
+| [index.html](index.html) | Pengarah tautan utama Pages ke game |
+| [docs/index.html](docs/index.html) | Struktur UI dan entrypoint game |
 | [docs/style.css](docs/style.css) | Tema, tata letak, dan responsivitas |
 | [docs/engine.js](docs/engine.js) | Geometri, matriks, shader, dan renderer |
 | [docs/core.js](docs/core.js) | Data awal, resep, save validation, ray, collision |
@@ -570,8 +582,8 @@ Contoh prinsip transaksi inventory: periksa seluruh kebutuhan lebih dahulu, baru
 |---|---|---|
 | Perancangan | Narasi, spesifikasi, diagram README | Sketsa dan storyboard visual |
 | Produksi | Kode dan riwayat commit GitHub | Screenshot runtime |
-| Verifikasi | 12 tes yang dapat dijalankan ulang | Log perangkat, bug, dan playtest |
-| Distribusi | Workflow Pages | URL dan status deployment sukses |
+| Verifikasi | 14 tes yang dapat dijalankan ulang | Log perangkat, bug, dan playtest |
+| Distribusi | URL game dan [deployment pengarah berhasil](https://github.com/NourAnisa/fading-dawn/actions/runs/34572720239) | Verifikasi tampilan dan gameplay pada perangkat nyata |
 
 Pengembangan kode dan dokumentasi dibantu AI. Identitas mahasiswa/tim, kontribusi masing-masing anggota, hasil observasi, dan penjelasan teknis tetap perlu dilengkapi sesuai kegiatan yang benar-benar dilakukan.
 
@@ -579,7 +591,6 @@ Pengembangan kode dan dokumentasi dibantu AI. Identitas mahasiswa/tim, kontribus
 
 - [Repositori dan kode](https://github.com/NourAnisa/fading-dawn).
 - [Status workflow/deployment](https://github.com/NourAnisa/fading-dawn/actions).
-- Alamat tujuan: `https://nouranisa.github.io/fading-dawn/` — verifikasi setelah GitHub Pages aktif.
+- [Buka game di GitHub Pages](https://nouranisa.github.io/fading-dawn/).
+- [Tautan langsung ke folder game](https://nouranisa.github.io/fading-dawn/docs/).
 - QR code belum dibuat sebelum alamat publik terkonfirmasi dapat dimainkan.
-
-

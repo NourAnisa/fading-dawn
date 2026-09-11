@@ -9,6 +9,16 @@ export function perspective(aspect){const f=1/Math.tan(Math.PI/6),n=.12,far=340;
 export const color=hex=>[parseInt(hex.slice(0,2),16)/255,parseInt(hex.slice(2,4),16)/255,parseInt(hex.slice(4,6),16)/255];
 export class Geometry{
  constructor(){this.data=[];}
+ beam(a,b,width,col){
+  const direction=unit(sub(b,a));
+  const side=unit(cross(direction,Math.abs(direction.y)>.95?vec(1,0,0):vec(0,1,0)));
+  const up=unit(cross(direction,side));
+  for(const axis of [side,up]){
+   const point=(p,sign)=>vec(p.x+axis.x*width*sign,p.y+axis.y*width*sign,p.z+axis.z*width*sign);
+   this.tri(point(a,-1),point(a,1),point(b,1),col);
+   this.tri(point(a,-1),point(b,1),point(b,-1),col);
+  }
+ }
  tri(a,b,c,col){const n=unit(cross(sub(b,a),sub(c,a)));for(const p of [a,b,c])this.data.push(p.x,p.y,p.z,n.x,n.y,n.z,...col);}
  box(x,y,z,w,h,d,col,r=0){const s=Math.sin(r),c=Math.cos(r);const p=(a,b,e)=>vec(x+a*c-e*s,y+b,z+a*s+e*c);const v=[p(-w/2,-h/2,-d/2),p(w/2,-h/2,-d/2),p(w/2,h/2,-d/2),p(-w/2,h/2,-d/2),p(-w/2,-h/2,d/2),p(w/2,-h/2,d/2),p(w/2,h/2,d/2),p(-w/2,h/2,d/2)];for(const f of [[0,3,2,1],[4,5,6,7],[0,4,7,3],[1,2,6,5],[3,7,6,2],[0,1,5,4]]){this.tri(v[f[0]],v[f[1]],v[f[2]],col);this.tri(v[f[0]],v[f[2]],v[f[3]],col);}}
  cone(x,y,z,r,h,col,sides=7){for(let i=0;i<sides;i++){const a=i/sides*Math.PI*2,b=(i+1)/sides*Math.PI*2;this.tri(vec(x+Math.cos(a)*r,y,z+Math.sin(a)*r),vec(x,y+h,z),vec(x+Math.cos(b)*r,y,z+Math.sin(b)*r),col);}}

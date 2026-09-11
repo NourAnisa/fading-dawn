@@ -9,3 +9,14 @@ export function loadSave(raw){try{const v=JSON.parse(raw);if(!v||v.version!==1||
 export function rng(seed=781){return()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};}
 export function rayBox(origin,dir,b,max=100){let low=0,high=max;for(const axis of ['x','y','z']){const extent=b[axis==='x'?'w':axis==='y'?'h':'d']/2,base=b[axis];if(Math.abs(dir[axis])<1e-8){if(origin[axis]<base-extent||origin[axis]>base+extent)return null;}else{let a=(base-extent-origin[axis])/dir[axis],c=(base+extent-origin[axis])/dir[axis];if(a>c)[a,c]=[c,a];low=Math.max(low,a);high=Math.min(high,c);if(low>high)return null;}}return low;}
 export function collides(x,z,boxes,r=.38){return boxes.some(b=>Math.abs(x-b.x)<b.w/2+r&&Math.abs(z-b.z)<b.d/2+r);}
+// The same line-of-sight rule is used for aim selection and the muzzle ray.
+export function traceScene(origin,dir,boxes,enemies,max=90){
+ let distance=max,enemyId=null;
+ for(const b of boxes){const hit=rayBox(origin,dir,b,distance);if(hit!==null&&hit<=distance)distance=hit;}
+ for(const e of enemies){
+  if(e.hp<=0)continue;
+  const hit=rayBox(origin,dir,{x:e.x,y:1,z:e.z,w:1,h:2.1,d:1},distance);
+  if(hit!==null&&hit<distance){distance=hit;enemyId=e.id;}
+ }
+ return {distance,enemyId};
+}
