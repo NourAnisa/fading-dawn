@@ -7,11 +7,27 @@ const unit=a=>{const l=Math.hypot(a.x,a.y,a.z)||1;return vec(a.x/l,a.y/l,a.z/l);
 export function lookAt(eye,target){const z=unit(sub(eye,target)),x=unit(cross(vec(0,1,0),z)),y=cross(z,x);return new Float32Array([x.x,y.x,z.x,0,x.y,y.y,z.y,0,x.z,y.z,z.z,0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);}
 export function perspective(aspect){const f=1/Math.tan(Math.PI/6),n=.12,far=340;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+n)/(n-far),-1,0,0,2*far*n/(n-far),0]);}
 export const color=hex=>[parseInt(hex.slice(0,2),16)/255,parseInt(hex.slice(2,4),16)/255,parseInt(hex.slice(4,6),16)/255];
+const sphereMeshes=new Map();
 export class Geometry{
  constructor(){this.data=[];}
  ellipsoid(x,y,z,rx,ry,rz,col,sides=12,rings=8){
-  const point=(u,v)=>vec(x+rx*Math.sin(v)*Math.cos(u),y+ry*Math.cos(v),z+rz*Math.sin(v)*Math.sin(u));
-  for(let j=0;j<rings;j++)for(let i=0;i<sides;i++){const u=i/sides*Math.PI*2,U=(i+1)/sides*Math.PI*2,v=j/rings*Math.PI,V=(j+1)/rings*Math.PI;const a=point(u,v),b=point(U,v),c=point(U,V),d=point(u,V);this.tri(a,c,b,col);this.tri(a,d,c,col);}
+  if(rx<=0||ry<=0||rz<=0)throw Error('Ellipsoid radii must be positive');
+  // Unit mesh is shared by every limb; inverse radii give smooth outward normals.
+  const key=`${sides}/${rings}`;
+  let mesh=sphereMeshes.get(key);
+  if(!mesh){
+   mesh=[];
+   const point=(u,v)=>[Math.sin(v)*Math.cos(u),Math.cos(v),Math.sin(v)*Math.sin(u)];
+   for(let j=0;j<rings;j++)for(let i=0;i<sides;i++){
+    const u=i/sides*Math.PI*2,U=(i+1)/sides*Math.PI*2,v=j/rings*Math.PI,V=(j+1)/rings*Math.PI;
+    const a=point(u,v),b=point(U,v),c=point(U,V),d=point(u,V);
+    if(j>0)mesh.push(a,b,c);
+    if(j<rings-1)mesh.push(a,c,d);
+   }
+   sphereMeshes.set(key,mesh);
+  }
+  for(const [px,py,pz] of mesh){const n=unit(vec(px/rx,py/ry,pz/rz));this.data.push(x+rx*px,y+ry*py,z+rz*pz,n.x,n.y,n.z,...col);}
+
  }
  beam(a,b,width,col){
   const direction=unit(sub(b,a));

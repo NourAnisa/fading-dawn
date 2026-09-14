@@ -6,3 +6,20 @@
 
 .mission .next-step{border-left:2px solid var(--accent);padding:10px 12px;margin-top:16px;background:#10251fe8;color:#f7e4c8;font-size:13px;line-height:1.6;text-shadow:none}
 @media(max-width:760px){.mission .next-step{font-size:10px;line-height:1.45;padding:7px 8px;margin-top:10px}}
+
+/* Keep the world visible on phone landscape displays. */
+.map-box{border-radius:50%;overflow:hidden;box-shadow:0 2px 18px #07151455}
+.map-box>span{position:absolute;bottom:10px;left:12%;width:76%;text-align:center;background:#12201abf;border:0}
+.map-box b{display:none}
+.vignette{box-shadow:inset 0 0 120px #07151445}
+@media(max-height:500px) and (min-width:600px){
+ header{padding:10px 18px}.brand{font-size:22px}.brand span{font-size:10px}
+ .mission{top:56px;left:18px;max-width:210px}.mission h2{font-size:14px}
+ .mission p{font-size:10px;margin:3px 0}.mission .next-step{font-size:10px;line-height:1.4;padding:5px 8px;margin-top:5px}
+ .map-box{top:56px;right:18px;width:90px}.map-box>span{font-size:7px;bottom:6px;padding:2px}
+ footer{bottom:12px;left:18px;right:18px}.quickbar{position:static}.quickbar button{font-size:10px;padding:7px}
+ .vitals{width:140px}.ammo b{font-size:28px}.ammo{min-width:90px}
+ #touchControls{bottom:76px}.move-pad{grid-template-columns:repeat(3,38px)}.move-pad button{padding:8px}
+ .action-pad button{padding:9px;font-size:11px}#toast{bottom:76px;font-size:11px;max-width:42vw}
+ #buildHud{bottom:150px;left:240px;padding:10px;max-width:250px;font-size:11px}
+}
