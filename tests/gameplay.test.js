@@ -36,3 +36,15 @@ test('gun damages visible targets, but a nearby wall blocks the muzzle even when
  h.run('tick(.2);');
  assert.equal(h.run('tracers.length'),0);
 });
+
+test('stopping resets the walking pose and repeating poses reuse geometry',()=>{
+ const h=harness();h.run('begin(false);openingTime=0;keys.add("KeyW");tick(.1);');
+ assert.ok(h.run('moveTime')>0);h.run('keys.clear();tick(.1);');assert.equal(h.run('moveTime'),0);
+ h.run('dynamicGeometry();');const size=h.run('figureCache.size');h.run('dynamicGeometry();');assert.equal(h.run('figureCache.size'),size);
+});
+test('bridge approaches remain open and side barriers prevent leaving the deck',()=>{
+ const h=harness();
+ assert.equal(h.run('collides(-25,-3,staticBoxes,.38)'),false);
+ assert.equal(h.run('collides(-25,-6.3,staticBoxes,.38)'),true);
+ assert.equal(h.run('collides(-3,-3,staticBoxes,.38)'),false);
+});

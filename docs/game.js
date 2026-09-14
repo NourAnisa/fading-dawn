@@ -3,7 +3,7 @@ import {Renderer,Geometry,vec,color} from './engine.js';
 const $=id=>document.getElementById(id), canvas=$('world'), SAVE='fading-dawn-v1';
 let renderer;
 try{renderer=new Renderer(canvas);}catch(e){$('bootError').textContent=e.message;$('start').disabled=true;throw e;}
-const palette={ground:color('394739'),road:color('53574b'),bark:color('51483b'),leaf:color('354f40'),leaf2:color('415b43'),stone:color('788278'),metal:color('65766d'),rust:color('a57144'),dark:color('263b36'),light:color('d1c4a0'),skin:color('ba987c'),cloth:color('677c6b'),red:color('bc5140')};
+const palette={ground:color('596044'),road:color('64655e'),bark:color('51483b'),leaf:color('354f40'),leaf2:color('415b43'),stone:color('788278'),metal:color('65766d'),rust:color('a57144'),dark:color('263b36'),light:color('d1c4a0'),skin:color('ba987c'),cloth:color('677c6b'),red:color('bc5140')};
 let state=fresh(), running=false, buildMode=false,piece='foundation',rotation=0,yaw=0,pitch=-.13;
 let last=performance.now(), saveTimer=0, fireCooldown=0, reload=0, hitTime=0, hurtTime=0,moveTime=0;
 let eye=vec(0,4.5,27),forward=vec(0,-.1,-1), toastUntil=0, nearest=null, candidate=null, audio=null;
@@ -17,10 +17,43 @@ function obstacle(x,z,w,h,d,c){box(staticGeo,x,h/2,z,w,h,d,c);staticBoxes.push({
 box(staticGeo,0,-.25,0,230,.5,230,palette.ground);
 box(staticGeo,0,.012,-7,7,.025,125,palette.road);
 for(let z=-66;z<60;z+=7)box(staticGeo,0,.04,z,.13,.025,2,color('b5af86'));
+// Reference-inspired overgrown bridge approach. Deck remains level with the road.
+const steel=color('353e43'), weathered=color('75664f');
+box(staticGeo,-26,.018,-3,46,.035,6,palette.road);
+for(const z of [-6.3,.3]){
+ box(staticGeo,-26,5.8,z,44,.32,.32,steel);
+ box(staticGeo,-26,.5,z,44,.25,.25,steel);
+ staticBoxes.push({x:-26,y:2.9,z,w:44,h:5.8,d:.35});
+ for(let x=-48;x<=-4;x+=5.5){
+  box(staticGeo,x,2.9,z,.28,5.8,.28,steel);
+  if(x<-4){staticGeo.beam(vec(x,.5,z),vec(x+5.5,5.8,z),.16,steel);staticGeo.beam(vec(x,5.8,z),vec(x+5.5,.5,z),.12,steel);}
+ }
+}
+for(let x=-48;x<=-4;x+=5.5){box(staticGeo,x,5.8,-3,.24,.25,6.9,steel);}
+// Roadside boards and concrete shoulders frame the approach.
+for(const [x,z] of [[6,-12],[9,-26]]){
+ obstacle(x,z,.16,2.8,.16,steel);
+ box(staticGeo,x,2.4,z,1.6,.9,.13,weathered);
+ box(staticGeo,x,2.42,z+.08,1.05,.10,.02,palette.light);
+ box(staticGeo,x,2.19,z+.08,.65,.07,.02,palette.light);
+}
 // Horizon ridges are outside the walkable area.
 for(let i=0;i<42;i++){const a=i/42*Math.PI*2;staticGeo.cone(Math.cos(a)*125,-1,Math.sin(a)*125,rand(14,28),rand(25,57),color(i%2?'546659':'465b53'),6);}
-for(let i=0;i<220;i++){const x=rand(-85,85),z=rand(-85,75);if(Math.abs(x)<6||Math.hypot(x,z-20)<11||Math.hypot(x-22,z+34)<14||Math.hypot(x+20,z+15)<13)continue;const h=rand(5,10);box(staticGeo,x,h*.35,z,.45,h*.7,.45,palette.bark);staticGeo.cone(x,h*.22,z,rand(1.8,2.7),h*.65,palette.leaf,7);staticGeo.cone(x,h*.51,z,rand(1.2,1.9),h*.56,palette.leaf2,7);staticBoxes.push({x,y:1.5,z,w:.6,h:3,d:.6});}
+for(let i=0;i<220;i++){const x=rand(-85,85),z=rand(-85,75);if((x>-51&&x<-1&&z>-10&&z<4)||Math.abs(x)<6||Math.hypot(x,z-20)<11||Math.hypot(x-22,z+34)<14||Math.hypot(x+20,z+15)<13)continue;const h=rand(5,10);box(staticGeo,x,h*.35,z,.45,h*.7,.45,palette.bark);staticGeo.cone(x,h*.22,z,rand(1.8,2.7),h*.65,palette.leaf,7);staticGeo.cone(x,h*.51,z,rand(1.2,1.9),h*.56,palette.leaf2,7);staticBoxes.push({x,y:1.5,z,w:.6,h:3,d:.6});}
 for(let i=0;i<210;i++){const x=rand(-74,74),z=rand(-72,68);if(Math.abs(x)<5)continue;staticGeo.cone(x,0,z,rand(.2,.5),rand(.2,.65),i%2?palette.leaf:palette.leaf2,4);}
+// Deterministic grass blades, wildflowers and worn asphalt patches.
+for(let i=0;i<2800;i++){
+ const x=rand(-65,65),z=rand(-65,55);
+ if(Math.abs(x)<3.6||(x>-49&&x<-3&&z>-6.5&&z<.6))continue;
+ const h=rand(.12,.47),c=color(i%3?'6c7544':'87905c');
+ staticGeo.tri(vec(x-.07,0,z),vec(x+.10,h,z+.04),vec(x+.07,0,z),c);
+ staticGeo.tri(vec(x,0,z-.08),vec(x-.06,h*.8,z),vec(x,0,z+.08),c);
+ if(i%27===0)staticGeo.ellipsoid(x,h,z,.07,.035,.07,color(i%2?'a5a0be':'c6c6ac'),6,4);
+}
+for(let i=0;i<75;i++){
+ const x=rand(-3.1,3.1),z=rand(-65,54);
+ box(staticGeo,x,.04,z,rand(.1,.6),.014,rand(.3,1.4),color('51534c'),rand(-.5,.5));
+}
 // Abandoned outpost: open doorways remain traversable.
 function cabin(x,z){obstacle(x-4,z,.4,4,9,palette.metal);obstacle(x+4,z,.4,4,9,palette.metal);obstacle(x,z-4.5,8,4,.4,palette.metal);obstacle(x-2.8,z+4.5,2.4,4,.4,palette.metal);obstacle(x+2.8,z+4.5,2.4,4,.4,palette.metal);box(staticGeo,x,4.2,z,9,.35,10,palette.rust);box(staticGeo,x,.07,z,8,.14,9,color('555a50'));box(staticGeo,x,3.25,z+4.73,2.8,.45,.1,palette.dark);}
 cabin(-20,-15);cabin(34,-40);
@@ -110,22 +143,42 @@ function updateGuide(){
  else text=`Menuju menara: siapkan komponen ${state.inventory.scrap}/5 dan batu ${state.inventory.stone}/4.`;
  $('nextStep').textContent=text;
 }
+const figureCache=new Map();
 function figure(g,x,z,c,t,enemy=false,facing=0){
- const model=new Geometry(),step=Math.sin(t)*.16;
- // Separate left/right legs; the whole model rotates about the vertical axis.
- box(model,-.19,.42,step,.26,.84,.28,c);
- box(model,.19,.42,-step,.26,.84,.28,c);
- box(model,-.19,.12,step-.09,.28,.22,.45,palette.dark);
- box(model,.19,.12,-step-.09,.28,.22,.45,palette.dark);
- box(model,0,1.18,0,.65,.85,.45,c);
- box(model,0,1.85,0,.43,.43,.43,enemy?palette.metal:palette.skin);
- box(model,-.43,1.22,-step,.22,.68,.23,c);
- box(model,.43,1.22,enemy?step:-.2,.22,.68,.23,c);
- if(enemy){box(model,0,1.87,-.223,.31,.055,.015,palette.red);}
+ const pose=Math.round(((t%(Math.PI*2)+Math.PI*2)%(Math.PI*2))/(Math.PI*2)*24)%24;
+ const key=`${enemy}/${c.join(",")}/${pose}`;
+ let model=figureCache.get(key);
+ if(!model){
+ model=new Geometry();
+ const step=Math.sin(pose/24*Math.PI*2)*.23;
+ const rounded=(x,y,z,rx,ry,rz,col)=>model.ellipsoid(x,y,z,rx,ry,rz,col);
+ const trousers=enemy?c:color('454c50'),top=enemy?c:color('48484b');
+ rounded(-.17,.48,step,.15,.46,.16,trousers);
+ rounded(.17,.48,-step,.15,.46,.16,trousers);
+ rounded(-.17,.12,step-.10,.16,.13,.25,palette.dark);
+ rounded(.17,.12,-step-.10,.16,.13,.25,palette.dark);
+ rounded(0,.95,0,.30,.22,.20,trousers);
+ rounded(0,1.17,0,.23,.21,.17,enemy?c:palette.skin);
+ rounded(0,1.43,0,.33,.25,.21,top);
+ rounded(0,1.70,0,.09,.13,.09,palette.skin);
+ rounded(0,1.89,0,.20,.25,.20,enemy?palette.metal:palette.skin);
+ rounded(-.40,1.38,-step,.105,.24,.11,enemy?c:palette.skin);
+ rounded(-.43,1.11,-step-.08,.10,.20,.10,enemy?c:palette.skin);
+ rounded(.40,1.38,step,.105,.24,.11,enemy?c:palette.skin);
+ rounded(.43,1.16,enemy?step:-.19,.10,.18,.10,enemy?c:palette.skin);
+ if(enemy){box(model,0,1.91,-.196,.26,.045,.03,palette.red);}
  else{
-  box(model,0,2.06,0,.5,.12,.51,palette.dark);
-  box(model,0,1.16,.31,.49,.63,.22,palette.rust);
+  const hair=color('664239');
+  rounded(0,2.03,.035,.215,.16,.205,hair);
+  rounded(0,1.86,.16,.22,.24,.09,hair);
+  rounded(-.18,1.9,.035,.06,.23,.17,hair);
+  rounded(.18,1.9,.035,.06,.23,.17,hair);
+  box(model,0,1.39,.23,.37,.42,.16,palette.dark);
+  model.beam(vec(-.25,1.62,.24),vec(.18,1.13,.24),.025,palette.dark);
+  model.beam(vec(.25,1.62,.24),vec(-.18,1.13,.24),.025,palette.dark);
   box(model,.43,1.3,-.35,.14,.17,.65,palette.dark);
+ }
+ figureCache.set(key,model);
  }
  const cos=Math.cos(facing),sin=Math.sin(facing);
  for(let i=0;i<model.data.length;i+=9){
@@ -140,10 +193,10 @@ function dynamicGeometry(){const g=new Geometry();for(const r of resources){if(s
  box(g,shot.from.x,shot.from.y,shot.from.z,.13,.13,.13,color('ffdca0'));
  if(shot.hit)box(g,shot.to.x,shot.to.y,shot.to.z,.15,.15,.15,palette.rust);
 }const glow=state.won?color('a5e6b0'):palette.rust;box(g,22,1.15,-33.35,.35,.16,.05,glow);return g;}
-function drawMap(){const ctx=$('map').getContext('2d'),size=168;ctx.clearRect(0,0,size,size);ctx.fillStyle='#182a25';ctx.fillRect(0,0,size,size);ctx.strokeStyle='#57715c40';for(let i=0;i<size;i+=28){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,size);ctx.moveTo(0,i);ctx.lineTo(size,i);ctx.stroke();}const point=(x,z)=>[84+x*.9,84+z*.9];ctx.fillStyle='#77816e';ctx.fillRect(81,12,6,126);ctx.fillStyle='#6e7e6b';for(const c of [[-20,-15],[34,-40]]){const [x,y]=point(...c);ctx.fillRect(x-4,y-5,8,10);}ctx.fillStyle='#e2ab6f';const [rx,rz]=point(radio.x,radio.z);ctx.fillRect(rx-3,rz-3,6,6);ctx.fillStyle='#cd725e';for(const e of enemies)if(e.hp>0){const [x,y]=point(e.x,e.z);ctx.beginPath();ctx.arc(x,y,2,0,7);ctx.fill();}const [x,y]=point(state.x,state.z);ctx.save();ctx.translate(x,y);ctx.rotate(yaw);ctx.fillStyle='#f3efe0';ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(-4,4);ctx.lineTo(4,4);ctx.closePath();ctx.fill();ctx.restore();}
+function drawMap(){const ctx=$('map').getContext('2d'),size=168;ctx.clearRect(0,0,size,size);ctx.fillStyle='#182a25';ctx.fillRect(0,0,size,size);ctx.strokeStyle='#57715c40';for(let i=0;i<size;i+=28){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,size);ctx.moveTo(0,i);ctx.lineTo(size,i);ctx.stroke();}const point=(x,z)=>[84+x*.9,84+z*.9];ctx.fillStyle='#77816e';ctx.fillRect(81,12,6,126);const [bx,bz]=point(-48,-3);ctx.fillStyle='#bdad8d';ctx.fillRect(bx,bz-3,44*.9,6);ctx.strokeStyle='#e1d0af';ctx.strokeRect(bx,bz-3,44*.9,6);ctx.fillStyle='#6e7e6b';for(const c of [[-20,-15],[34,-40]]){const [x,y]=point(...c);ctx.fillRect(x-4,y-5,8,10);}ctx.fillStyle='#e2ab6f';const [rx,rz]=point(radio.x,radio.z);ctx.fillRect(rx-3,rz-3,6,6);ctx.fillStyle='#cd725e';for(const e of enemies)if(e.hp>0){const [x,y]=point(e.x,e.z);ctx.beginPath();ctx.arc(x,y,2,0,7);ctx.fill();}const [x,y]=point(state.x,state.z);ctx.save();ctx.translate(x,y);ctx.rotate(yaw);ctx.fillStyle='#f3efe0';ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(-4,4);ctx.lineTo(4,4);ctx.closePath();ctx.fill();ctx.restore();}
 function tick(dt){
  for(let i=tracers.length-1;i>=0;i--){tracers[i].life-=dt;if(tracers[i].life<=0)tracers.splice(i,1);}
- state.time+=dt;saveTimer+=dt;fireCooldown=Math.max(0,fireCooldown-dt);hitTime=Math.max(0,hitTime-dt);hurtTime=Math.max(0,hurtTime-dt);if(reload>0){reload-=dt;if(reload<=0){const n=Math.min(12-state.mag,state.inventory.ammo);state.mag+=n;state.inventory.ammo-=n;tone(240,.08);}}const walk=(keys.has('KeyW')||keys.has('ArrowUp')?1:0)-(keys.has('KeyS')||keys.has('ArrowDown')?1:0),side=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),length=Math.hypot(walk,side);const sprint=keys.has('ShiftLeft')&&state.stamina>2&&length>0;const speed=sprint?7.5:4.2;if(length){moveEntity(state,(walk*Math.sin(yaw)+side*Math.cos(yaw))/length*speed*dt,(-walk*Math.cos(yaw)+side*Math.sin(yaw))/length*speed*dt,obstacles());moveTime+=dt*(sprint?13:9);}state.stamina=clamp(state.stamina+dt*(sprint?-20:14),0,100);state.hunger=clamp(state.hunger-dt*.035,0,100);state.thirst=clamp(state.thirst-dt*(sprint?.1:.055),0,100);if(state.hunger<=0||state.thirst<=0)state.health=Math.max(0,state.health-dt*1.5);const boxes=obstacles();for(const e of enemies){if(e.hp<=0)continue;e.cool=Math.max(0,e.cool-dt);const d=distance(state,e);if(d<17&&d>1.25)moveEntity(e,(state.x-e.x)/d*1.75*dt,(state.z-e.z)/d*1.75*dt,boxes,.38);if(d<1.7&&e.cool<=0){const dx=state.x-e.x,dz=state.z-e.z,len=Math.hypot(dx,dz)||1;if(!boxes.some(b=>rayBox(vec(e.x,1,e.z),vec(dx/len,0,dz/len),b,len)!==null)){state.health=Math.max(0,state.health-9);e.cool=1.3;hurtTime=.6;tone(50,.18,'triangle');}}}nearest=null;let best=2.7;for(const r of resources){const d=distance(r,state);if(d<best&&!state.collected.includes(r.id)){nearest=r;best=d;}}if(buildMode){candidate=buildCandidate();$('prompt').textContent=candidate.valid?'Klik / Pasang untuk membangun':'Bahan atau posisi belum sesuai';}else if(distance(state,radio)<3.3){$('prompt').textContent='E · Radio — 5 komponen + 4 batu';}else{$('prompt').textContent=nearest?`E · Ambil ${nearest.type==='supply'?'persediaan':names[nearest.type]}`:'';}if(state.health<=0){$('endTag').textContent='PERJALANAN TERHENTI';$('endTitle').textContent='Hutan kembali sunyi.';$('endText').textContent='Lanjutkan dari progres terakhir yang tersimpan. Gunakan persediaan dari tas dan hindari menghadapi banyak musuh sekaligus.';$('endAction').textContent=saved()?'Muat progres terakhir':'Coba perjalanan baru';openPanel('ending');}if(saveTimer>=15){save(true);saveTimer=0;}updateHUD();}
+ state.time+=dt;saveTimer+=dt;fireCooldown=Math.max(0,fireCooldown-dt);hitTime=Math.max(0,hitTime-dt);hurtTime=Math.max(0,hurtTime-dt);if(reload>0){reload-=dt;if(reload<=0){const n=Math.min(12-state.mag,state.inventory.ammo);state.mag+=n;state.inventory.ammo-=n;tone(240,.08);}}const walk=(keys.has('KeyW')||keys.has('ArrowUp')?1:0)-(keys.has('KeyS')||keys.has('ArrowDown')?1:0),side=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),length=Math.hypot(walk,side);const sprint=keys.has('ShiftLeft')&&state.stamina>2&&length>0;const speed=sprint?7.5:4.2;if(length){moveEntity(state,(walk*Math.sin(yaw)+side*Math.cos(yaw))/length*speed*dt,(-walk*Math.cos(yaw)+side*Math.sin(yaw))/length*speed*dt,obstacles());moveTime+=dt*(sprint?13:9);}else{moveTime=0;}state.stamina=clamp(state.stamina+dt*(sprint?-20:14),0,100);state.hunger=clamp(state.hunger-dt*.035,0,100);state.thirst=clamp(state.thirst-dt*(sprint?.1:.055),0,100);if(state.hunger<=0||state.thirst<=0)state.health=Math.max(0,state.health-dt*1.5);const boxes=obstacles();for(const e of enemies){if(e.hp<=0)continue;e.cool=Math.max(0,e.cool-dt);const d=distance(state,e);if(d<17&&d>1.25)moveEntity(e,(state.x-e.x)/d*1.75*dt,(state.z-e.z)/d*1.75*dt,boxes,.38);if(d<1.7&&e.cool<=0){const dx=state.x-e.x,dz=state.z-e.z,len=Math.hypot(dx,dz)||1;if(!boxes.some(b=>rayBox(vec(e.x,1,e.z),vec(dx/len,0,dz/len),b,len)!==null)){state.health=Math.max(0,state.health-9);e.cool=1.3;hurtTime=.6;tone(50,.18,'triangle');}}}nearest=null;let best=2.7;for(const r of resources){const d=distance(r,state);if(d<best&&!state.collected.includes(r.id)){nearest=r;best=d;}}if(buildMode){candidate=buildCandidate();$('prompt').textContent=candidate.valid?'Klik / Pasang untuk membangun':'Bahan atau posisi belum sesuai';}else if(distance(state,radio)<3.3){$('prompt').textContent='E · Radio — 5 komponen + 4 batu';}else{$('prompt').textContent=nearest?`E · Ambil ${nearest.type==='supply'?'persediaan':names[nearest.type]}`:'';}if(state.health<=0){$('endTag').textContent='PERJALANAN TERHENTI';$('endTitle').textContent='Hutan kembali sunyi.';$('endText').textContent='Lanjutkan dari progres terakhir yang tersimpan. Gunakan persediaan dari tas dan hindari menghadapi banyak musuh sekaligus.';$('endAction').textContent=saved()?'Muat progres terakhir':'Coba perjalanan baru';openPanel('ending');}if(saveTimer>=15){save(true);saveTimer=0;}updateHUD();}
 let hudTimer=0;
 function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;try{if(running&&!isPaused())tick(dt);if(openingTime>0){openingTime-=dt;const progress=12-openingTime;$('openingText').textContent=progress<4?'Sektor 07. Tidak ada kabar sejak senja.':progress<8?'Persediaan menipis. Menara radio masih diam.':'Temukan perlindungan. Pulihkan sinyal.';if(openingTime<=0)$('opening').hidden=true;}let target;if(running){target=camera();}else{const t=now*.000035;eye=vec(42+Math.sin(t)*12,12,28+Math.cos(t)*10);target=vec(12,2,-25);}const light=running?.87+.13*Math.cos(state.time/480):1;renderer.render(eye,target,dynamicGeometry(),light);hudTimer+=dt;if(hudTimer>.1){drawMap();hudTimer=0;}$('hitmarker').hidden=hitTime<=0;$('damage').style.opacity=hurtTime>0?.5:0;if(toastUntil&&now>toastUntil){$('toast').textContent='';toastUntil=0;}if(bgm)bgm.gain.value=music&&running&&!isPaused()?.06:0;requestAnimationFrame(frame);}catch(e){unlock();running=false;$('menu').hidden=false;$('hud').hidden=true;$('bootError').textContent='Permainan berhenti: '+e.message;console.error(e);}}
 function choosePiece(type){piece=type;updateHUD();}
